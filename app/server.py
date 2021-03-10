@@ -9,10 +9,21 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.staticfiles import StaticFiles
 
-export_file_url = 'https://www.dropbox.com/s/2haxffenzakj9e7/export.pkl?dl=1'
-export_file_name = 'export.pkl'
+export_file_url = 'https://drive.google.com/uc?export=download&id=1q6Yk4zLA1sk0vcFF1m6Z9v5_2_dXSFIj'
+export_file_name = 'multi-class.pkl'
 
-classes = ['100', '200', '50','500']
+classes_single = ['1', '10', '100', '20', '200', '5', '50', '500', 'inr', 'usd']
+classes_multi = ['inr/50',
+ 'inr/100',
+ 'inr/200',
+ 'inr/500',
+ 'usd/1',
+ 'usd/10',
+ 'usd/100',
+ 'usd/20',
+ 'usd/5',
+ 'usd/50']
+classes = classes_multi
 path = Path(__file__).parent
 
 app = Starlette()
@@ -37,7 +48,7 @@ async def setup_learner():
     except RuntimeError as e:
         if len(e.args) > 0 and 'CPU-only machine' in e.args[0]:
             print(e)
-            message = "\n\nThis model was trained with an old version of fastai and will not work in a CPU environment.\n\nPlease update the fastai library in your training environment and export your model again.\n\nSee instructions for 'Returning to work' at https://course.fast.ai."
+            message = "\n\nThis model will not work in a CPU environment.\n\nPlease update your training environment and export your model again."
             raise RuntimeError(message)
         else:
             raise
@@ -60,9 +71,8 @@ async def analyze(request):
     img_data = await request.form()
     img_bytes = await (img_data['file'].read())
     img = open_image(BytesIO(img_bytes))
-    pred = learn.predict(img)
-    probabilities=[ '%.2f' % float(100*elem) for elem in pred[2] ]
-    return JSONResponse({'result': str(pred[0]),'probability':str(max(probabilities))})
+    prediction = learn.predict(img)[0]
+    return JSONResponse({'result': str(prediction)})
 
 
 if __name__ == '__main__':
